@@ -1,3 +1,8 @@
+/**
+ * Add buttons to editor toolbar for some common references I use
+ *
+ * @traking: [[Special:GlobalUsage/User:Helder.wiki/Tools/ButtonsForRefs.js]] ([[File:User:Helder.wiki/Tools/ButtonsForRefs.js]])
+ */
 if ( typeof $.fn.wikiEditor !== 'undefined' ) {
 	$( function() {
 		$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
