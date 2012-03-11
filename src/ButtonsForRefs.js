@@ -3,7 +3,10 @@
  *
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/ButtonsForRefs.js]] ([[File:User:Helder.wiki/Tools/ButtonsForRefs.js]])
  */
+/*global $, customizeToolbar, mw*/
+/*jslint white: true */
 function customizeToolbar() {
+	'use strict';
 	$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
 		'sections': {
 			'refs': {
@@ -102,7 +105,9 @@ function customizeToolbar() {
 						action: {
 							type: 'encapsulate',
 							options: {
-								pre: "* {' + '{Citar livro|nome= |sobrenome= |título= |subtítulo= |idioma= |edição= |local= |editora= |ano= |páginas= |volumes= |volume= |id=ISBN |url= }}\n"
+								pre: mw.config.get( 'wgDBname' ) === 'ptwikibooks'
+									? '* {' + '{Referência a livro|NomeAutor= |SobrenomeAutor= |Título= |Subtítulo= |Edição= |Local de publicação= |Editora= |Ano= |Páginas= |Volumes= |Volume= |ID= |URL= }}'
+									: '* {' + '{Citar livro|nome= |sobrenome= |título= |subtítulo= |idioma= |edição= |local= |editora= |ano= |páginas= |volumes= |volume= |id=ISBN |url= }}\n'
 							}
 						}
 					}
@@ -111,14 +116,15 @@ function customizeToolbar() {
 		}
 	} );
 }
- 
+
 /* Check if we are in edit mode and the required modules are available and then customize the toolbar */
 if ($.inArray(mw.config.get('wgAction'), ['edit', 'submit']) !== -1 ) {
-        mw.loader.using( 'user.options', function () {
-                if ( mw.user.options.get('usebetatoolbar') ) {
+	mw.loader.using( 'user.options', function () {
+		'use strict';
+		if ( mw.user.options.get('usebetatoolbar') ) {
                         mw.loader.using( 'ext.wikiEditor.toolbar', function () {
-                                $(customizeToolbar);
-                        } );
-                }
-        } );
+				$(customizeToolbar);
+			} );
+		}
+	} );
 }
