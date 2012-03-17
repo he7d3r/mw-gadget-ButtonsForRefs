@@ -1,12 +1,14 @@
 /**
  * Add buttons to editor toolbar for some common references I use
- *
+ * @author: [[User:Helder.wiki]]
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/ButtonsForRefs.js]] ([[File:User:Helder.wiki/Tools/ButtonsForRefs.js]])
  */
-/*global $, customizeToolbar, mw*/
-/*jslint white: true */
+/*jslint browser: true, white: true*/
+/*global jQuery, mediaWiki */
+( function ( $, mw /* , undefined */ ) {
+'use strict';
+
 function customizeToolbar() {
-	'use strict';
 	$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
 		'sections': {
 			'refs': {
@@ -120,7 +122,6 @@ function customizeToolbar() {
 /* Check if we are in edit mode and the required modules are available and then customize the toolbar */
 if ($.inArray(mw.config.get('wgAction'), ['edit', 'submit']) !== -1 ) {
 	mw.loader.using( 'user.options', function () {
-		'use strict';
 		if ( mw.user.options.get('usebetatoolbar') ) {
                         mw.loader.using( 'ext.wikiEditor.toolbar', function () {
 				$(customizeToolbar);
@@ -128,3 +129,5 @@ if ($.inArray(mw.config.get('wgAction'), ['edit', 'submit']) !== -1 ) {
 		}
 	} );
 }
+
+}( jQuery, mediaWiki ) );
