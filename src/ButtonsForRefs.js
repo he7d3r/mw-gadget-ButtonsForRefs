@@ -4,8 +4,8 @@
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/ButtonsForRefs.js]] ([[File:User:Helder.wiki/Tools/ButtonsForRefs.js]])
  */
 /*jslint browser: true, white: true*/
-/*global jQuery, mediaWiki */
-( function ( $, mw /* , undefined */ ) {
+/*global mediaWiki, jQuery */
+( function ( mw , $ ) {
 'use strict';
 
 function customizeToolbar() {
@@ -16,8 +16,8 @@ function customizeToolbar() {
 				'label': 'Referências'
 			}
 		}
-	} );
-	$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
+	} )
+	.wikiEditor( 'addToToolbar', {
 		'section': 'refs',
 		'groups': {
 			'subjects': {
@@ -130,4 +130,4 @@ if ($.inArray(mw.config.get('wgAction'), ['edit', 'submit']) !== -1 ) {
 	} );
 }
 
-}( jQuery, mediaWiki ) );
+}( mediaWiki, jQuery ) );
