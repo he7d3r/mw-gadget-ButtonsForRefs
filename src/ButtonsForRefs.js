@@ -44,6 +44,15 @@ function customizeToolbar() {
                                                                           'pre': '* {' + '{Citar livro|nome=Manfredo Perdigão do |sobrenome=Carmo |título=Geometria Diferencial de Curvas e Superfícies |subtítulo= |idioma= |edição=4 |local=Rio de Janeiro |editora=SBM |ano=2010 |páginas= |volumes= |volume= |id=ISBN 978-85-85818-26-5|url=http://www.sbm.org.br/web//up/editor/File/livros/ctu04.pdf }}\n'
 									}
 								}
+							},
+							'warner' : {
+								'label': 'Warner. Foundations of differentiable manifolds and Lie groups',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{cite book|last=Warner| first=Frank Wilson| author-link=Frank Wilson Warner| date=1983| title=Foundations of differentiable manifolds and Lie groups| publisher=Springer| isbn = 9780387908946}}\n'
+									}
+								}
 							}
 						}
 					},
@@ -66,6 +75,69 @@ function customizeToolbar() {
 									'type': 'encapsulate',
 									'options': {
 										'pre': '* {' + '{Citar livro|nome=José Adelino|sobrenome=Serrasqueiro|título=[[s:Galeria:Tratado de Algebra Elementar.djvu|Tratado de Algebra Elementar]]|edição=9|local=Largo da Sé Velha|editora=Livraria Central de J. Diogo Pires|ano=1906}}\n'
+									}
+								}
+							},
+							'hazewinkel2004' : {
+								'label': 'Hazewinkel. Algebras, rings and modules',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{cite book|first1=Michiel|last1=Hazewinkel|authorlink1=Michiel Hazewinkel|first2=Nadezhda Mikhaĭlovna|last2=Gubareni|authorlink2=Nadezhda Mikhaĭlovna|first3=Nadiya|last3=Gubareni|authorlink3=Nadiya Gubareni|first4=Vladimir V.|last4=Kirichenko|authorlink4=Vladimir V. Kirichenko|title=Algebras, rings and modules|publisher=Springer|year=2004|isbn=9781402026904}}.\n'
+									}
+								}
+							},
+							'lam2001' : {
+								'label': 'Lam. A first course in noncommutative rings',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{cite book |last1=Lam |first1=Tsit-Yuen |authorlink1= |last2= |first2= |authorlink2= |title=A first course in noncommutative rings |url= |edition=2 |series=Graduate texts in mathematics |volume=131 |year=2001 |publisher=Springer |location= |isbn=0387951830 |id= }}\n'
+									}
+								}
+							},
+							'lawson1998' : {
+								'label': 'Inverse semigroups',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{cite book |last1=Lawson |first1=M.V. |authorlink1= |last2= |first2= |authorlink2= |title=Inverse semigroups: the theory of partial symmetries |url= |edition= |series= |volume= |year=1998 |publisher=World Scientific |location= |isbn=9789810233167 |id= }}\n'
+									}
+								}
+							},
+							'jacobson2009I' : {
+								'label': 'Jacobson. Basic algebra I',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{Citation| last=Jacobson| first=Nathan| author-link=Nathan Jacobson| date=2009| title=Basic algebra| edition=2nd| volume = 1 | series= | publisher=Dover| isbn = 978-0-486-47189-1}}\n'
+									}
+								}
+							},
+							'jacobson2009II' : {
+								'label': 'Jacobson. Basic algebra II',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{Cite book| last=Jacobson| first=Nathan| author-link=Nathan Jacobson| date=2009| title=Basic algebra| edition=2nd| volume = 2 | series= | publisher=Dover| isbn = 978-0-486-47187-7}}\n'
+									}
+								}
+							},
+							'dascalescu2001' : {
+								'label': 'Dascalescu. Hopf Algebras: An introduction',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{Cite book| last1=Dăscălescu| first1=Sorin| last2=Năstăsescu| first2=Constantin| last3=Raianu| first3=Șerban| date=2001| title=Hopf Algebras| subtitle=An introduction| edition=1st| volume = 235| series=Pure and Applied Mathematics | publisher=Marcel Dekker| isbn = 0-8247-0481-9}}\n'
+									}
+								}
+							},
+							'milies2002' : {
+								'label': 'Milies. An introduction to group rings',
+								'action': {
+									'type': 'encapsulate',
+									'options': {
+										'pre': '* {' + '{cite book  | author = Milies, César Polcino | author2 = Sehgal, Sudarshan K. | year = 2002 | title = An introduction to group rings | publisher = Springer | isbn = 9781402002380 }}\n'
 									}
 								}
 							}
@@ -107,9 +179,35 @@ function customizeToolbar() {
 						action: {
 							type: 'encapsulate',
 							options: {
-								pre: mw.config.get( 'wgDBname' ) === 'ptwikibooks'
-									? '* {' + '{Referência a livro|NomeAutor= |SobrenomeAutor= |Título= |Subtítulo= |Edição= |Local de publicação= |Editora= |Ano= |Páginas= |Volumes= |Volume= |ID= |URL= }}'
-									: '* {' + '{Citar livro|nome= |sobrenome= |título= |subtítulo= |idioma= |edição= |local= |editora= |ano= |páginas= |volumes= |volume= |id=ISBN |url= }}\n'
+								pre: ( function ( db ) {
+									return {
+										ptwikibooks: '* {' + '{Referência a livro|NomeAutor= |SobrenomeAutor= |Título= |Subtítulo= |Edição= |Local de publicação= |Editora= |Ano= |Páginas= |Volumes= |Volume= |ID= |URL= }}',
+										ptwiki: '* {' + '{Citar livro|nome= |sobrenome= |título= |subtítulo= |idioma= |edição= |local= |editora= |ano= |páginas= |volumes= |volume= |id=ISBN |url= }}\n',
+										enwiki: '* {' + '{cite book |last1= |first1= |authorlink1= |last2= |first2= |authorlink2= |title= |url= |edition= |series= |volume= |year= |publisher= |location= |isbn= |id= }}\n'
+									}[ db ];
+								}( mw.config.get( 'wgDBname' ) ) )
+							}
+						}
+					},
+					'my-google-books-quote': {
+						label: 'Citar livro do Google Books',
+						type: 'button',
+						icon: '//upload.wikimedia.org/wikipedia/commons/4/4f/Button_verse.png',
+						action: {
+							type: 'encapsulate',
+							options: {
+								pre: '<ref>Author (), {' + '{Google books quote|id=|page=9999|text=|p. }}</ref>'
+							}
+						}
+					},
+					'my-ref-improve': {
+						label: 'Precisa de mais citações',
+						type: 'button',
+						icon: '//upload.wikimedia.org/wikipedia/commons/f/fe/Button_refs.png',
+						action: {
+							type: 'encapsulate',
+							options: {
+								pre: '{' + '{Refimprove|{' + '{subst:DATE}}}}'
 							}
 						}
 					}
