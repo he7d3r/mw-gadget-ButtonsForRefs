@@ -89,15 +89,15 @@
 			var id, item, c, book, datatype, value, year, q,
 				books = [],
 				toUpdate = {};
-			for( id in data.entities ){
+			for ( id in data.entities ) {
 				item = data.entities[id];
 				books.push( {
 					label: item.labels[ lang ].value,
 					qitem: id
 				} );
 				book = books[ books.length - 1 ];
-				for( c in item.claims ){
-					if ( tParam[c] && tParam[c][lang] ){
+				for ( c in item.claims ) {
+					if ( tParam[c] && tParam[c][lang] ) {
 						value = item.claims[c][0].mainsnak.datavalue.value;
 						datatype = item.claims[c][0].mainsnak.datatype;
 						if ( datatype === 'quantity' ) {
@@ -109,7 +109,7 @@
 						} else if ( datatype === 'time' ) {
 							// P577
 							year = value.time.match( /(\d{4})-\d\d-\d\dT/ );
-							if( year ){
+							if ( year ) {
 								book[ tParam[c][lang] ] = year[1];
 							}
 						} else if ( datatype === 'wikibase-item' ) {
@@ -117,7 +117,7 @@
 							// FIXME: get the language code (ISO 639-1, P218) for P407
 							// FIXME: ignore if it is the same as lang
 							q = 'Q' + value['numeric-id'];
-							if( !toUpdate[ q ] ){
+							if ( !toUpdate[ q ] ) {
 								toUpdate[ q ] = [];
 							}
 							toUpdate[ q ].push( {
@@ -141,19 +141,19 @@
 			.done( function ( data ) {
 				var id, i, c, p, template,
 					list = {};
-				for( id in data.entities ){
+				for ( id in data.entities ) {
 					try {
-						for( i = 0; i < toUpdate[ id ].length; i++ ){
+						for ( i = 0; i < toUpdate[ id ].length; i++ ) {
 							toUpdate[ id ][i].book[ toUpdate[ id ][i].param ] = data.entities[id].labels[lang].value;
 						}
-					} catch( err ){
+					} catch ( err ) {
 						console.warn( data.entities[id] );
 					}
 				}
-				for( i = 0; i < books.length; i++ ){
+				for ( i = 0; i < books.length; i++ ) {
 					template = '* {' + '{' + tName[lang];
-					for( p in books[i] ){
-						if ( p !== 'qitem' && p !== 'label' ){
+					for ( p in books[i] ) {
+						if ( p !== 'qitem' && p !== 'label' ) {
 							template += '|' + p + '=' + books[i][p];
 						}
 					}
