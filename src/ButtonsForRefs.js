@@ -5,8 +5,177 @@
  */
 ( function ( mw, $ ) {
 	'use strict';
+	var bookIds = window.buttonsForRefsIds || [],
+		lang = mw.config.get('wgContentLanguage'),
+		ajaxParams = {
+			url: '//www.wikidata.org/w/api.php',
+			xhrFields: {
+				'withCredentials': true
+			}
+		},
+		tName = {
+			pt: 'Citar livro',
+			en: 'Cite book'
+		},
+		tParam = {
+			// {{Citar livro}}
+			'P50': {
+				// FIXME: split into first / last names
+				pt: 'nome',
+				en: 'first1'
+			}, // autor
+			// 'P50': 'sobrenome', // autor
+			'P357': {
+				pt: 'título',
+				en: 'title'
+			}, // título de uma obra
+			'P392': {
+				pt: 'subtítulo'
+			},
+			'P407': {
+				pt: 'língua',
+				en: 'language'
+			}, // idioma original
+			'P393': {
+				pt: 'edição',
+				en: 'edition'
+			}, // número de edição
+			'P291': {
+				pt: 'local',
+				en: 'location'
+			}, // local de publicação
+			'P123': {
+				pt: 'editora',
+				en: 'publisher'
+			}, // editora
+			'P577': {
+				pt: 'ano',
+				en: 'year'
+			}, // data de publicação
+			'P1104': {
+				pt: 'páginas',
+				en: 'pages'
+			}, // número de páginas
+			// 'P9999999999': 'volumes',
+			'P478': {
+				pt: 'volume',
+				en: 'volume'
+			}, // volume
+			'P957': {
+				pt: 'id',
+				en: 'isbn'
+			}, // ISBN-10
+			'P212': {
+				pt: 'id',
+				en: 'isbn'
+			}, // ISBN-13
+			'P953': {
+				pt: 'url',
+				en: 'url'
+			} // texto na íntegra disponível em
+			// 'P31': 'instância de',
+			// 'P921': 'tópico principal da obra criativa'
+		};
+	function getFromWikidata( bookIds ) {
+		var deferred = $.Deferred(),
+			params = {
+				origin: 'https:' + mw.config.get( 'wgServer' ),
+				action: 'wbgetentities',
+				ids: bookIds.join( '|' ),
+				format: 'json'
+			};
+		( new mw.Api( { ajax: ajaxParams } ) ).get( params )
+		.done( function ( data ) {
+			var id, item, c, book, datatype, value, year, q,
+				books = [],
+				toUpdate = {};
+			for( id in data.entities ){
+				item = data.entities[id];
+				books.push( {
+					label: item.labels[ lang ].value,
+					qitem: id
+				} );
+				book = books[ books.length - 1 ];
+				for( c in item.claims ){
+					if ( tParam[c] && tParam[c][lang] ){
+						value = item.claims[c][0].mainsnak.datavalue.value;
+						datatype = item.claims[c][0].mainsnak.datatype;
+						if ( datatype === 'quantity' ) {
+							// P1104
+							book[ tParam[c][lang] ] = parseInt( value.amount, 10 );
+						} else if ( datatype === 'string' || datatype === 'url' ) {
+							// P357, P392, P393, P478, P957, P212, P953
+							book[ tParam[c][lang] ] = value;
+						} else if ( datatype === 'time' ) {
+							// P577
+							year = value.time.match( /(\d{4})-\d\d-\d\dT/ );
+							if( year ){
+								book[ tParam[c][lang] ] = year[1];
+							}
+						} else if ( datatype === 'wikibase-item' ) {
+							// P50, P407, P291, P123
+							// FIXME: get the language code (ISO 639-1, P218) for P407
+							// FIXME: ignore if it is the same as lang
+							q = 'Q' + value['numeric-id'];
+							if( !toUpdate[ q ] ){
+								toUpdate[ q ] = [];
+							}
+							toUpdate[ q ].push( {
+								book: book,
+								param: tParam[c][lang]
+							} );
+						} else {
+							console.warn( c, tParam[c][lang], datatype );
+						}
+					}
+				}
+			}
+			( new mw.Api( { ajax: ajaxParams } ) ).get( {
+				origin: 'https:' + mw.config.get( 'wgServer' ),
+				action: 'wbgetentities',
+				ids: Object.keys( toUpdate ).join( '|' ),
+				props: 'labels',
+				languages: lang,
+				format: 'json'
+			} )
+			.done( function ( data ) {
+				var id, i, c, p, template,
+					list = {};
+				for( id in data.entities ){
+					try {
+						for( i = 0; i < toUpdate[ id ].length; i++ ){
+							toUpdate[ id ][i].book[ toUpdate[ id ][i].param ] = data.entities[id].labels[lang].value;
+						}
+					} catch( err ){
+						console.warn( data.entities[id] );
+					}
+				}
+				for( i = 0; i < books.length; i++ ){
+					template = '* {' + '{' + tName[lang];
+					for( p in books[i] ){
+						if ( p !== 'qitem' && p !== 'label' ){
+							template += '|' + p + '=' + books[i][p];
+						}
+					}
+					template += '}}\n';
+					list[ books[i].qitem ] = {
+						'label': books[i].label,
+						'action': {
+							'type': 'encapsulate',
+							'options': {
+								'pre': template
+							}
+						}
+					};
+				}
+				deferred.resolve( list );
+			} );
+		} );
+		return deferred.promise();
+	}
 
-	function customizeToolbar() {
+	function customizeToolbar( a, b, list ) {
+		console.log( 'arguments', arguments );
 		$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
 			'sections': {
 				'refs': {
@@ -19,151 +188,12 @@
 			'section': 'refs',
 			'groups': {
 				'subjects': {
-					'label': 'Temas',
+					'label': 'Livros',
 					'tools': {
 						'geometry-heading': {
-							'label': 'Geometria',
+							'label': 'Selecione...',
 							'type': 'select',
-							'list': {
-								'campos1735': {
-									'label': 'Manoel de Campos. Elementos de geometria plana e solida segundo a ordem de Euclides.',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citar livro|nome=Manoel de |sobrenome=Campos |título=Elementos de geometria plana e solida segundo a ordem de Euclides |subtítulo= |idioma= |edição= |local= |editora=Officina Rita-Cassiana |ano=1735 |páginas= |volumes= |volume= |id=|url=http://books.google.com.br/books?id=Hof-Xq5rm5kC }}\n'
-										}
-									}
-								},
-								'manfredo2010': {
-									'label': 'Carmo, M. P. do. Geometria Diferencial de Curvas e Superfícies.',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-										'pre': '* {' + '{Citar livro|nome=Manfredo Perdigão do |sobrenome=Carmo |título=Geometria Diferencial de Curvas e Superfícies |subtítulo= |idioma= |edição=4 |local=Rio de Janeiro |editora=SBM |ano=2010 |páginas= |volumes= |volume= |id=ISBN 978-85-85818-26-5|url=http://www.sbm.org.br/web//up/editor/File/livros/ctu04.pdf }}\n'
-										}
-									}
-								},
-								'warner': {
-									'label': 'Warner. Foundations of differentiable manifolds and Lie groups',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{cite book|last=Warner| first=Frank Wilson| author-link=Frank Wilson Warner| date=1983| title=Foundations of differentiable manifolds and Lie groups| publisher=Springer| isbn = 9780387908946}}\n'
-										}
-									}
-								}
-							}
-						},
-						'algebra-heading': {
-							'label': 'Álgebra',
-							'type': 'select',
-							'list': {
-								'vianna1914': {
-									'label': 'Vianna, J. J. L.. Elementos de Arithmetica',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citar livro|nome=João José Luiz|sobrenome=Vianna|título=[[s:Galeria:Elementos de Arithmetica|Elementos de Arithmetica]]|edição=15|local=Rio de Janeiro|editora=Francisco Alves|ano=1914}}\n'
-										}
-									}
-								},
-								'serrasqueiro1906': {
-									'label': 'Serrasqueiro, J. A.. Tratado de Algebra Elementar',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citar livro|nome=José Adelino|sobrenome=Serrasqueiro|título=[[s:Galeria:Tratado de Algebra Elementar.djvu|Tratado de Algebra Elementar]]|edição=9|local=Largo da Sé Velha|editora=Livraria Central de J. Diogo Pires|ano=1906}}\n'
-										}
-									}
-								},
-								'hazewinkel2004': {
-									'label': 'Hazewinkel. Algebras, rings and modules',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{cite book|first1=Michiel|last1=Hazewinkel|authorlink1=Michiel Hazewinkel|first2=Nadezhda Mikhaĭlovna|last2=Gubareni|authorlink2=Nadezhda Mikhaĭlovna|first3=Nadiya|last3=Gubareni|authorlink3=Nadiya Gubareni|first4=Vladimir V.|last4=Kirichenko|authorlink4=Vladimir V. Kirichenko|title=Algebras, rings and modules|publisher=Springer|year=2004|isbn=9781402026904}}.\n'
-										}
-									}
-								},
-								'lam2001': {
-									'label': 'Lam. A first course in noncommutative rings',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{cite book |last1=Lam |first1=Tsit-Yuen |authorlink1= |last2= |first2= |authorlink2= |title=A first course in noncommutative rings |url= |edition=2 |series=Graduate texts in mathematics |volume=131 |year=2001 |publisher=Springer |location= |isbn=0387951830 |id= }}\n'
-										}
-									}
-								},
-								'lawson1998': {
-									'label': 'Inverse semigroups',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{cite book |last1=Lawson |first1=M.V. |authorlink1= |last2= |first2= |authorlink2= |title=Inverse semigroups: the theory of partial symmetries |url= |edition= |series= |volume= |year=1998 |publisher=World Scientific |location= |isbn=9789810233167 |id= }}\n'
-										}
-									}
-								},
-								'jacobson2009I': {
-									'label': 'Jacobson. Basic algebra I',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citation| last=Jacobson| first=Nathan| author-link=Nathan Jacobson| date=2009| title=Basic algebra| edition=2nd| volume = 1 | series= | publisher=Dover| isbn = 978-0-486-47189-1}}\n'
-										}
-									}
-								},
-								'jacobson2009II': {
-									'label': 'Jacobson. Basic algebra II',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Cite book| last=Jacobson| first=Nathan| author-link=Nathan Jacobson| date=2009| title=Basic algebra| edition=2nd| volume = 2 | series= | publisher=Dover| isbn = 978-0-486-47187-7}}\n'
-										}
-									}
-								},
-								'dascalescu2001': {
-									'label': 'Dascalescu. Hopf Algebras: An introduction',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Cite book| last1=Dăscălescu| first1=Sorin| last2=Năstăsescu| first2=Constantin| last3=Raianu| first3=Șerban| date=2001| title=Hopf Algebras| subtitle=An introduction| edition=1st| volume = 235| series=Pure and Applied Mathematics | publisher=Marcel Dekker| isbn = 0-8247-0481-9}}\n'
-										}
-									}
-								},
-								'milies2002': {
-									'label': 'Milies. An introduction to group rings',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{cite book  | author = Milies, César Polcino | author2 = Sehgal, Sudarshan K. | year = 2002 | title = An introduction to group rings | publisher = Springer | isbn = 9781402002380 }}\n'
-										}
-									}
-								}
-							}
-						},
-						'coding-heading': {
-							'label': 'Códigos',
-							'type': 'select',
-							'list': {
-								'hefez2002': {
-									'label': 'Hefez, A.; Villela, M. L. T.. Códigos Corretores de Erros',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citar livro|autor=HEFEZ, Abramo; VILLELA, Maria Lúcia T. |título=Códigos Corretores de Erros |subtítulo= |idioma= |edição= |local=Rio de Janeiro |editora=IMPA |ano=2002 |páginas= |volumes= |volume= |id=ISBN 85-244-0169-9|url= }}\n'
-										}
-									}
-								},
-								'roman1997': {
-									'label': 'Roman, S.. Introduction to Coding and Information Theory',
-									'action': {
-										'type': 'encapsulate',
-										'options': {
-											'pre': '* {' + '{Citar livro|nome=Steven |sobrenome=Roman |título=Introduction to Coding and Information Theory |subtítulo= |idioma= |edição= |local= |editora=Springer |ano=1997 |páginas= |volumes= |volume= |id=ISBN 0-387-94704-3|url= }}\n'
-										}
-									}
-								}
-							}
+							'list': list
 						}
 					}
 				},
@@ -223,7 +253,8 @@
 			if ( mw.user.options.get( 'usebetatoolbar' ) == 1 ) {
 				$.when(
 					mw.loader.using( 'ext.wikiEditor.toolbar' ),
-					$.ready
+					$.ready,
+					getFromWikidata( bookIds )
 				).then( customizeToolbar );
 			}
 			/*jshint eqeqeq:true*/
