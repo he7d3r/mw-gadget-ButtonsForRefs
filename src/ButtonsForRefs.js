@@ -91,8 +91,11 @@
 				toUpdate = {};
 			for ( id in data.entities ) {
 				item = data.entities[id];
+				if ( !item.labels[ lang ] ){
+					console.log( 'Missing label in ' + lang + '. These are the existing labels: ', JSON.stringify( item.labels ) )
+				}
 				books.push( {
-					label: item.labels[ lang ].value,
+					label: (item.labels[ lang ] || item.labels.pt).value,
 					qitem: id
 				} );
 				book = books[ books.length - 1 ];
