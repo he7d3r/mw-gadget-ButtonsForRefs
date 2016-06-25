@@ -106,7 +106,7 @@
 						if ( datatype === 'quantity' ) {
 							// P1104
 							book[ tParam[c][lang] ] = parseInt( value.amount, 10 );
-						} else if ( datatype === 'string' || datatype === 'url' ) {
+						} else if ( datatype === 'string' || datatype === 'url' || datatype === 'external-id' ) {
 							// P357, P392, P393, P478, P957, P212, P953
 							book[ tParam[c][lang] ] = value;
 						} else if ( datatype === 'time' ) {
@@ -128,7 +128,7 @@
 								param: tParam[c][lang]
 							} );
 						} else {
-							console.warn( c, tParam[c][lang], datatype );
+							console.warn( 'Unknown datatype "' + datatype + '" for https://www.wikidata.org/wiki/Property:' + c + '.', tParam[c][lang], value );
 						}
 					}
 				}
@@ -150,7 +150,7 @@
 							toUpdate[ id ][i].book[ toUpdate[ id ][i].param ] = data.entities[id].labels[lang].value;
 						}
 					} catch ( err ) {
-						console.warn( data.entities[id] );
+						console.warn( err, data.entities[id] );
 					}
 				}
 				for ( i = 0; i < books.length; i++ ) {
@@ -178,7 +178,6 @@
 	}
 
 	function customizeToolbar( a, b, list ) {
-		console.log( 'arguments', arguments );
 		$( '#wpTextbox1' ).wikiEditor( 'addToToolbar', {
 			'sections': {
 				'refs': {
